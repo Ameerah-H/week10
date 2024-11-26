@@ -1,0 +1,247 @@
+<html>
+
+<head>
+    <link rel="stylesheet" href="https://cdnjs.cloudfare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
+    <link rel="manifest" href="petstore1.webmanifest">
+    <title>
+        Vue.js Pet Depot
+    </title>
+    <script src="products.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.7.16/dist/vue.js"></script>
+    <style>
+        .product{
+            border:1px grey solid;
+            padding: 20px;
+            margin:20px;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- div container -->
+    <div id="app">
+        <header>
+            <!-- <h1>Vue Js Pet Depot</h1> -->
+            <h1 v-text="sitename">{{sitename}}</h1>
+            <button v-on:click="showCheckout">
+                {{cartItemCount}}
+                <span class="fas fa-cart-plus"></span>Checkout
+                <!-- <i class="fa-solid fa-cart-shopping"></i> -->
+
+                <!-- <span class="fa-solid fa-cart-flatbed-suitcase"></span>Checkout -->
+                <svg xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 640 512"><!--!Font Awesome Free 6.6.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.-->
+                    <path
+                        d="M0 32C0 14.3 14.3 0 32 0L48 0c44.2 0 80 35.8 80 80l0 288c0 8.8 7.2 16 16 16l464 0c17.7 0 32 14.3 32 32s-14.3 32-32 32l-66.7 0c1.8 5 2.7 10.4 2.7 16c0 26.5-21.5 48-48 48s-48-21.5-48-48c0-5.6 1-11 2.7-16l-197.5 0c1.8 5 2.7 10.4 2.7 16c0 26.5-21.5 48-48 48s-48-21.5-48-48c0-5.6 1-11 2.7-16L144 448c-44.2 0-80-35.8-80-80L64 80c0-8.8-7.2-16-16-16L32 64C14.3 64 0 49.7 0 32zM432 96l0-40c0-4.4-3.6-8-8-8l-80 0c-4.4 0-8 3.6-8 8l0 40 96 0zM288 96l0-40c0-30.9 25.1-56 56-56l80 0c30.9 0 56 25.1 56 56l0 40 0 224-192 0 0-224zM512 320l0-224 16 0c26.5 0 48 21.5 48 48l0 128c0 26.5-21.5 48-48 48l-16 0zM240 96l16 0 0 224-16 0c-26.5 0-48-21.5-48-48l0-128c0-26.5 21.5-48 48-48z" />
+                </svg>
+            </button>
+        </header>
+        <main>
+            <div v-if="showProduct">
+            
+                <div class="product" v-for="product in sortedProducts">
+                    <!-- this is where we are calling the product -->
+                    <h2 v-text="product.title"></h2>
+                    <figure>
+                        <img v-bind:src="product.image"></img>
+                    </figure>
+
+                    <p v-html="product.description"></p>
+                    <p>Price: {{product.price}}</p>
+                    <p>Available stock: {{product.availableInventory -cartCount(product.id) }}</p>
+
+                    <button v-on:click="addToCart(product)" v-if="canAddToCart(product)">
+                        Add to Cart
+                    </button>
+                    <button disabled="disabled" v-else>Add to cart</button>
+                    <span v-if="product.availableInventory === cartCount(product.id)">All Out!</span>
+                    <span v-else-if='product.availableInventory - cartCount(product.id) < 5'>
+                        Only {{product.availableInventory - cartCount(product.id)}} left!
+                    </span>
+                    <!-- If it is 0 say All out -->
+                    <!-- <span v-if="itemsLeft === 0">All Out!</span> -->
+                    <!--to give a message "Only _ left" if it is less than 5 we add conditionals, use span cause we want it side by side -->
+                    <!-- <span v-else-if="itemsLeft < 5 ">Only {{itemsLeft}}</span> -->
+                    <span v-else>Buy Now!</span>
+                    <div>
+                        <span v-for="n in product.rating">★</span>
+                        <span v-for="n in product.rating">☆</span>
+
+                    </div>
+                </div>
+
+            </div>
+
+            <div v-else>
+                <h2>Checkout</h2>
+                <p>
+                    <strong>First Name:</strong>
+                    <input v-model.trim="order.firstName">
+                </p>
+                <p>
+                    <strong>Last Name:</strong>
+                    <input v-model.trim="order.lastName">
+                </p>
+
+                <p>
+                    <strong>Address:</strong>
+                    <input v-model="order.address" />
+                </p>
+
+                <p>
+                    <strong>City:</strong>
+                    <input v-model="order.city" />
+                </p>
+
+                <p>
+                    <strong>State:</strong>
+                    <select v-model="order.state">
+                        <option disabled value="">State</option>
+                        <option v-for="(state,key) in states" v-bind:value="state">
+                            {{key}}
+                        </option>
+                        <!-- <option>AL</option>
+                    <option>AR</option>
+                    <option>CA</option>
+                    <option>NV</option> -->
+
+                    </select>
+                </p>
+
+                <p>
+                    <strong>Zip/Postal Code:</strong>
+                    <input v-model.number="order.zip" type="number" />
+                </p>
+
+                <p><input type="checkbox" value="true" id="gift" v-model="order.gift" v-bind:true-value="order.sendGift"
+                        v-bind:false-value="order.dontSendGift">
+
+                    <label for="gift">Ship As Gift?</label>
+                </p>
+
+                <p><input type="radio" value="Home" id="home" v-model="order.method">
+                    <label for="home">Home</label>
+                    <input type="radio" id="business" value="Business" v-model="order.method">
+                    <label for="business">Business</label>
+                </p>
+
+
+
+
+                <h2>Order Information</h2>
+                <p>First Name:{{order.firstName}}</p>
+                <p>Last Name:{{order.lastName}}</p>
+                <p>Address:{{order.address}}</p>
+                <p>City:{{order.city}}</p>
+                <p>Zip:{{order.zip}}</p>
+                <p>State: {{order.state}}</p>
+                <p>Gift?: {{order.gift}}</p>
+                <p>Method: {{order.method}}</p>
+
+                <button v-on:click="submitForm">Place Order</button>
+            </div>
+        </main>
+    </div>
+
+    <script type="text/javascript">
+        // vue instance 
+        let webstore = new Vue({
+            el: '#app', //mount
+            data: {
+                showProduct: true,
+                sitename: 'Vue.js Pet Depot',
+                products: products,
+                cart:[], //array to store the items in shopping cart
+
+                order: {
+                    firstName: '',
+                    lastName: '',
+                    address: '',
+                    city: '',
+                    zip: '',
+                    state: '',
+                    method: 'Home',
+                    gift: false,
+                    sendGift: 'Send as Gift',
+                    dontSendGift: 'Do not send as gift'
+                },
+
+                // product:{
+                //     id:1001,
+                //     title:"Cat Food, 25lb bag", //em tag is for emphasis
+                //     description:"A 25 pound bag of <em> irresistible </em>,"+"organic goodness for your cat",
+                //     price:2000,
+                //     image:"images/catfood.jpg",
+                //     availableInventory:10,
+                //     rating:3,
+
+                // }, 
+
+                states: {
+                    AL: 'Alabama',
+                    AR: 'Arizona',
+                    CA: 'California',
+                    NV: 'Nevada'
+                },
+
+                 
+            },
+            methods: {
+                // addToCart:function(){
+                //     this.cart.push(this.product.id);
+
+                // },
+                addToCart(product) {
+                    this.cart.push(product.id);
+                },
+                showCheckout() {
+                    this.showProduct = this.showProduct ? false : true;
+                },
+                submitForm() {
+                    alert('Order Submitted!')
+                },
+                canAddToCart(product) {
+                    return product.availableInventory > this.cartCount(product.id);
+                },
+                cartCount(id) {
+                    let count = 0;
+                    for (let i = 0; i < this.cart.length; i++) {
+                        if (this.cart[i] === id) {
+                            count++;
+                        }
+                    }
+                    return count;
+                },
+            },
+            computed: {
+                cartItemCount: function () {
+                    return this.cart.length;
+                },
+
+                // canAddToCart:function(){
+                //     return this.product.availableInventory>this.cartItemCount;
+                // },
+                //itemsLeft(){
+                // return this.product.availableInventory - this.cartItemCount;
+                // },
+                sortedProducts() {
+                    let productsArray = this.products.slice(0);
+                    function compare(a, b) {
+                        if (a.price > b.price)
+                            return 1;
+
+                        if (a.price < b.price)
+                            return -1;
+
+                        return 0;
+                    }
+                    return productsArray.sort(compare);
+                }
+            },
+
+        });
+    </script>
+</body>
+
+</html>
